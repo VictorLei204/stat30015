@@ -1,0 +1,23 @@
+---
+title: "HW6"
+output: html_document
+date: "2025-11-12"
+---
+```{r}
+data <- read.csv("simudata.csv")
+
+# 查看数据结构和摘要
+print("数据结构 (str):")
+str(data)
+print("数据摘要 (summary):")
+summary(data)
+```
+```{r}
+print(x)
+```
+
+模型:$y=x^2$
+
+模型:$$y=x^2$$
+
+![](test.jpeg)

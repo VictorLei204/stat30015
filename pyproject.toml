@@ -1,0 +1,19 @@
+[project]
+name = "stat30015"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "altair>=5.5.0",
+    "ipykernel>=6.30.1",
+    "matplotlib>=3.10.6",
+    "notebook>=7.4.5",
+    "numpy>=2.3.3",
+    "pandas[performance]>=2.3.3",
+    "pip>=25.2",
+    "polars>=1.34.0",
+    "scikit-learn>=1.7.2",
+    "statsmodels>=0.14.5",
+    "vl-convert-python>=1.8.0",
+]
