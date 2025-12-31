@@ -1,0 +1,102 @@
+---
+title: "HW8"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+### 1
+
+$$
+\begin{aligned}
+\sum_k \rho^2(Y_k,X_i) &= \sum_k \frac{\lambda_k (e_i^T\alpha_k)^2}{var(X_i)}\\
+&=\frac{1}{var(X_i)}e_i^T(\sum_k \lambda_k\alpha_k\alpha_k^T)e_i\\
+&=\frac{e_i^T\Sigma e_i}{var(X_i)}\\
+&= \frac{var(X_i)}{var(X_i)}\\
+&=1
+\end{aligned}
+$$
+
+### 2
+
+1. 第一步
+   - 最小距离 $d_{1,3} = 1$ ，聚为 4 类：$\{\{1,3\},\{2\},\{4\},\{5\}\}$
+2. 第二步
+   - 最小距离 $d_{\{1,3\},5}=d_{3,5}=2$，聚为 3 类：$\{\{1,3,5\},\{2\},\{4\}\}$
+3. 第三步
+   - 最小距离 $d_{2,4}=4$，，聚为 2 类：$\{\{1,3,5\},\{2,4\}\}$
+4. 第四步
+   - 聚为 1 类 $\{\{1,2,3,4,5\}\}$
+
+### 3
+
+令 $X = U\Sigma V^T$ ，其中 $\Sigma = diag(\sigma_1,\sigma_2,...,\sigma_n)$ ，$\sigma_i$为$X$第 $i$ 大的特征值
+$$||X-L||^2_F = \sum_j \sigma_j^2(X-L)$$
+$$\sigma_{i+j-1}(X)\leq\sigma_i(L)+\sigma_j(X-L)$$
+对于 $i\geq k + 1$ ， $\sigma_i(L) = 0$
+
+$i=k+1$时，
+$$\sigma_{k+j}(X)\leq \sigma_j(X-L)$$
+$$||X-L||^2_F = \sum_j \sigma_j^2(X-L)\geq \sum_j \sigma_{k+j}^2(X-L) = \sum_{i=k+1}\sigma_i^2(X)$$
+
+当$L^* = U_k\Sigma_kV_k^T=\sum_{i=1}^k\sigma_iu_iv_i^T$时，$||X-L^*||_F^2=\sum_{i=k+1}\sigma_i^2(X)$，达到下界，同时$L^*$为PCA前k主成分，故两者等价。
+
+### 4
+
+读取数据
+```{r}
+data <- readxl::read_xlsx("NBA.xlsx")
+```
+
+对除球员列的剩余自变量进行主成分分析(cor=TRUE表示使用相关系数矩阵计算，相当于对变量进行标准化)
+```{r}
+pca <- princomp(x = data[, -1],cor=TRUE)
+```
+
+画出碎石图
+```{r}
+screeplot(pca,type="lines")
+```
+
+发现碎石图拐点出现在第二个主成分，故只选择第一个主成分
+
+```{r}
+summary(pca)
+```
+
+发现第一个主成分特征值为11.6，方差贡献率为64%，前三个主成分的特征值大于1，的累计方差贡献率达到80%以上。
+猜测第一个主成分反映了球员的综合能力，第二、三个主成分与球员风格有关，其余主成分贡献较小。
+
+计算第一个主成分得分
+```{r}
+data$PC1 <- pca$scores[,1]
+# 按照第一个主成分得分排序，选出前10名
+data[order(-data$PC1), ][1:10, c(1, ncol(data))]
+```
+
+根据球员排序可以认为确实大致与球员综合能力相关，知名球星如詹姆斯得分36.1、科比得分28.0，都名列前茅。
+
+使用k-means对球员进行聚类分析，首先调factoextra包使用碎石图选取k,对前三个主成分进行聚类分析
+```{r}
+library(factoextra)
+fviz_nbclust(pca$scores[,1:3], kmeans, method = "wss") + ggtitle("Elbow method for PC1")
+```
+
+发现拐点出现在3附近，选择3类进行k-means聚类
+
+```{r}
+set.seed(123)
+kmeans_result <- kmeans(pca$scores[,1:3], centers = 3, nstart = 25)
+data$Cluster <- as.factor(kmeans_result$cluster)
+PC2 <- pca$scores[,2]
+ggplot(data, aes(x = PC1, y = PC2, color = Cluster)) + geom_point() + labs(title = "K-means Clustering on First Three Principal Components")
+```
+
+可以看出主要还是按第一主成分（综合能力）进行聚类
+
+```{r}
+head(final_data[final_data$Cluster == 1, ])
+head(final_data[final_data$Cluster == 2, ])
+head(final_data[final_data$Cluster == 3, ])
+```
+
+从球员名单来看，第一类主要是综合能力较强的球员，第二类是中等水平球员，第三类是综合能力较弱的球员。

@@ -1,0 +1,66 @@
+---
+title: "HW7"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+### 1
+
+构造拉格朗日函数，
+$$L(w,b,\xi,\alpha,\beta) = \frac{1}{2}||w||^2 + C\sum_{i=1}^N \xi_i^2 + \sum_{i=1}^N\alpha_i (1-\xi_i-y_i(w\cdot x_i + b)) - \sum_{i=1}^N \beta_i \xi_i$$
+其中$\alpha \geq 0, \beta \geq 0$
+$$\frac{\partial L}{\partial w} = w - \sum_{i=1}^N \alpha_i y_i x_i = 0$$
+$$w = \sum_{i=1}^N \alpha_i y_i x_i$$
+$$\frac{\partial L}{\partial b} = -\sum_{i=1}^N \alpha_i y_i = 0$$
+$$\sum_{i=1}^N \alpha_i y_i = 0$$
+$$\frac{\partial L}{\partial \xi_i} = 2C\xi_i - \alpha_i - \beta_i = 0$$
+$$\xi_i = \frac{\alpha_i + \beta_i}{2C}$$
+将以上三个式子代入拉格朗日函数，得到对偶问题：
+$$\max_{\alpha,\beta} \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i \alpha_j y_i y_j x_i \cdot x_j - \frac{1}{4C}\sum_{i=1}^N (\alpha_i + \beta_i)^2$$
+$$s.t. \sum_{i=1}^N \alpha_i y_i = 0$$
+$$\alpha \geq 0, \beta \geq 0$$
+化简得
+$$\max_{\alpha} \sum_{i=1}^N \alpha_i - \frac{1}{2}\sum_{i=1}^N\sum_{j=1}^N \alpha_i \alpha_j y_i y_j x_i \cdot x_j - \frac{1}{4C}\sum_{i=1}^N \alpha_i^2$$
+$$s.t. \sum_{i=1}^N \alpha_i y_i = 0$$
+$$\alpha \geq 0$$
+
+### 2
+
+#### 2.1 $\kappa_3 = a_1\kappa_1 + a_2\kappa_2$
+
+$$K_3 = a_1 K_1 + a_2 K_2$$
+$$K_1, K_2 半正定，则\forall 非零向量c, c^T K_1 c \geq 0, c^T K_2 c \geq 0$$
+$$c^T K_3 c = a_1 c^T K_1 c + a_2 c^T K_2 c \geq 0$$
+$$\Rightarrow K_3 半正定$$
+$$\Rightarrow \kappa_3 是有效核函数$$
+
+#### 2.2 $\kappa_4(x,x') = f(x)f(x')$
+
+$$K_{4,ij} = f(x_i)f(x_j) $$
+设向量 $f = (f(x_1), f(x_2), ..., f(x_n))^T$
+$$K_4 = f f^T$$
+$$\forall 非零向量 c, c^T K_4 c = c^T f f^T c = (f^T c)^2 \geq 0$$
+$$\Rightarrow K_4 半正定$$
+$$\Rightarrow \kappa_4 是有效核函数$$
+
+#### 2.3 $\kappa_5(x,x') = \kappa_1(x,x')\kappa_2(x,x')$
+
+$$K_{5,ij} = K_{1,ij} K_{2,ij}$$
+对半正定矩阵$K_1, K_2$，存在矩阵 $A, B$，使得 $K_1 = A A^T, K_2 = B B^T$
+$$K_{5,ij} = \sum_{k} \sum_{l} A_{ik} A_{jk} B_{il} B_{jl}$$
+设矩阵 $C$，其行向量为 $C_i = (A_{i1} B_{i1}, A_{i1} B_{i2}, ..., A_{i1} B_{im}, A_{i2} B_{i1}, A_{i2} B_{i2}, ..., A_{i2} B_{im}, ..., A_{in} B_{im})$
+$$K_{5,ij} = C_i \cdot C_j$$
+$$K_5 = C C^T$$
+$$\forall 非零向量 c, c^T K_5 c = c^T C C^T c = ||C^T c||^2 \geq 0$$
+$$\Rightarrow K_5 半正定$$
+$$\Rightarrow \kappa_5 是有效核函数$$
+
+#### 2.4 $\kappa_6(x,x') = f(x)\kappa_1(x,x')f(x')$
+
+$$K_{6,ij} = f(x_i) K_{1,ij} f(x_j)$$
+设对角矩阵 $D$，其对角线元素为 $D_{ii} = f(x_i)$
+$$K_6 = D K_1 D$$
+$$\forall 非零向量 c, c^T K_6 c = c^T D K_1 D c = (D c)^T K_1 (D c) \geq 0$$
+$$\Rightarrow K_6 半正定$$
+$$\Rightarrow \kappa_6 是有效核函数$$
+

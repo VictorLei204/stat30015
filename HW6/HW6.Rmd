@@ -1,23 +1,265 @@
 ---
 title: "HW6"
+date: "`r Sys.Date()`"
 output: html_document
-date: "2025-11-12"
 ---
+### 1
+
+当 $a \in T_t$ 时
+
+$$g_{k+1}(t) = g_k(t) > \alpha_k$$
+
+当 $a \notin T_t$ 时
+
+$$C(T'_t) = C(T_t) - C(T_a) + C(a)$$
+$$C(t) - C(T'_t) = C(t) - [C(T_t) - C(T_a) + C(a)]$$
+$$C(t) - C(T'_t) = (C(t) - C(T_t)) - (C(a) - C(T_a))$$
+$$|T'_t| = |T_t| - |T_a| + 1$$
+$$|T'_t| - 1 = (|T_t| - 1) - (|T_a| - 1)$$
+
+$$g_{k+1}(t) = \frac{C(t) - C(T'_t)}{|T'_t| - 1}$$
+
+$$g_{k+1}(t) = \frac{(C(t) - C(T_t)) - (C(a) - C(T_a))}{(|T_t| - 1) - (|T_a| - 1)}$$
+
+$$\alpha_k = \frac{C(a) - C(T_a)}{|T_a| - 1} \implies C(a) - C(T_a) = \alpha_k(|T_a| - 1)$$
+
+
+$$g_k(t) > \alpha_k$$
+$$\frac{C(t) - C(T_t)}{|T_t| - 1} > \alpha_k \implies C(t) - C(T_t) > \alpha_k(|T_t| - 1)$$
+
+
+$$\text{分子} > \alpha_k(|T_t| - 1) - \alpha_k(|T_a| - 1)$$
+$$\text{分子} > \alpha_k [ (|T_t| - 1) - (|T_a| - 1) ]$$
+
+$$\text{分母} = (|T_t| - 1) - (|T_a| - 1)$$
+
+
+$$g_{k+1}(t) > \frac{\alpha_k [ (|T_t| - 1) - (|T_a| - 1) ]}{(|T_t| - 1) - (|T_a| - 1)}$$
+综上可得
+$$g_{k+1}(t) > \alpha_k$$
+$$\alpha_{k+1} = \min_{t \in \mathcal{M}_{k+1}} g_{k+1}(t) > \alpha_k$$
+
+### 2
+
+先证$H(X) \ge 0$
+
+$\forall i, 0 \le p_i \le 1$, $\sum_{i=1}^n p_i = 1$.
+$$\log p_i \le 0$$
+$$p_i \log p_i \le 0$$
+$$\sum_{i=1}^{n} p_i \log p_i \le 0$$
+$$H(X) = -\sum_{i=1}^{n} p_i \log p_i \ge 0$$
+
+当且仅当存在某个 $k$ 使得 $p_k = 1$ 且其他 $p_i = 0$ ，即X只有一个取值时，等号成立。
+
+再证$H(X) \le \log n$
+
+
+$$H(X) = \sum_{i=1}^{n} p_i \log \left( \frac{1}{p_i} \right)$$
+
+由Jensen不等式：
+
+$$\sum_{i=1}^{n} p_i \log(x_i) \le \log \left( \sum_{i=1}^{n} p_i x_i \right)$$
+
+
+令 $x_i = \frac{1}{p_i}$
+$$H(X) = \sum_{i=1}^{n} p_i \log \left( \frac{1}{p_i} \right) \le \log \left( \sum_{i=1}^{n} p_i \cdot \frac{1}{p_i} \right)$$
+
+$$\sum_{i=1}^{n} p_i \cdot \frac{1}{p_i} = \sum_{i=1}^{n} 1 = n$$
+$$H(X) \le \log n$$
+
+当且仅当 $\frac{1}{p_i}$ 对所有 $i$ 都相等时，Jensen不等式取等号。
+这意味着
+$$p_1 = p_2 = \dots = p_n$$
+由于概率和为1，有
+$$p_i = \frac{1}{n} \quad \text{for all } i$$
+
+综上可得
+$$0 \le H(X) \le \log n$$
+当且仅当存在某个 $k$ 使得 $p_k = 1$ 且其他 $p_i = 0$ ，即X只有一个取值时，$H(X) = 0$。
+
+当且仅当$\forall i, p_i = \frac{1}{n}$时，$H(X) = \log n$。
+
+
+### 3.1 读入数据并了解各个自变量的含义
+
 ```{r}
+# 加载所需的库
+library(rpart)
+library(rpart.plot)
+library(ggplot2)
+library(caret)
+library(pROC)
+
+# 读入数据
 data <- read.csv("simudata.csv")
 
-# 查看数据结构和摘要
-print("数据结构 (str):")
-str(data)
-print("数据摘要 (summary):")
-summary(data)
+# 将 'black' 转换为因子 (0=未违约, 1=违约)
+data$black <- factor(data$black, levels = c(0, 1))
 ```
+
+
+### 3.2 对比箱线图分析
+
+#### 3.2.1 借贷比率 (creded) 箱线图
+
 ```{r}
-print(x)
+# 绘制 'creded' (借贷比率) 的对比箱线图
+p1 <- ggplot(data, aes(x = black, y = creded, fill = black)) +
+  geom_boxplot() +
+  labs(title = "借贷比率 (creded) 按违约情况分组的箱线图",
+       x = "black (0=未违约, 1=违约)",
+       y = "借贷比率 (creded)") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Paired", 
+                    labels = c("未违约", "违约"),
+                    name = "违约情况")
+
+print(p1)
 ```
 
-模型:$y=x^2$
+**解读：**
 
-模型:$$y=x^2$$
 
-![](test.jpeg)
+- 从箱线图可以看出，**违约组（black=1）的借贷比率中位数明显低于未违约组（black=0）**，未违约组的箱体整体位置更加靠上。
+- 这表明借贷比率与违约风险呈现**负相关**关系。经常使用信用卡交易的用户，可能更注重按时还款以维持良好的信用记录，从而降低了违约风险。相反，借贷比率较低的用户可能缺乏良好的信用管理习惯，违约风险相对较高。
+
+#### 3.2.2 所有行为最大值 (maxpay) 箱线图
+
+```{r}
+# 绘制 'maxpay' (所有行为最大值) 的对比箱线图
+p2 <- ggplot(data, aes(x = black, y = maxpay, fill = black)) +
+  geom_boxplot() +
+  labs(title = "所有行为最大值 (maxpay) 按违约情况分组的箱线图",
+       x = "black (0=未违约, 1=违约)",
+       y = "所有行为最大值 (maxpay)") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Paired",
+                    labels = c("未违约", "违约"),
+                    name = "违约情况") +
+  scale_y_log10()  # 对y轴进行log转换以便更清楚地观察
+
+print(p2)
+```
+
+**解读：**
+- 经过对数转换后的箱线图显示，两组的分布存在一定差异。违约组（black=1）的 `maxpay` 中位数略高于未违约组，且分布范围相对更广。
+- 这可能说明有极端高单笔支付能力的用户，可能承担更高的风险，导致违约概率略有增加。
+
+
+### 3.3 决策树模型建立与评估
+
+#### 3.3.1 数据集划分
+
+```{r}
+# 设定随机种子 = 2024
+set.seed(2024)
+
+# 按照 7:3 比例划分训练集和测试集 (对因变量 black 分层抽样)
+trainIndex <- createDataPartition(data$black, 
+                                  p = 0.7, 
+                                  list = FALSE, 
+                                  times = 1)
+
+trainData <- data[trainIndex, ]
+testData  <- data[-trainIndex, ]
+
+cat("训练集样本数:", nrow(trainData), "\n")
+cat("测试集样本数:", nrow(testData), "\n")
+```
+
+#### 3.3.2 建立决策树模型
+
+```{r}
+# 建立决策树模型 (使用 rpart 函数，设置为默认参数)
+tree_model <- rpart(black ~ ., 
+                    data = trainData, 
+                    method = "class")
+
+# 查看模型摘要
+print(tree_model)
+```
+
+
+#### 3.3.3 模型预测
+
+```{r}
+# 在测试集上进行预测
+
+# 1. 预测概率 (用于 ROC 和 AUC)
+#    type = "prob" 返回矩阵，第二列是 '1' (违约) 的概率
+pred_prob <- predict(tree_model, testData, type = "prob")[, 2]
+
+# 2. 预测类别 (用于混淆矩阵)
+pred_class <- predict(tree_model, testData, type = "class")
+```
+
+
+#### 3.3.4 ROC曲线与AUC值
+
+```{r}
+# 计算 ROC 曲线
+roc_curve <- roc(testData$black, pred_prob, levels = c("0", "1"))
+
+# 绘制 ROC 曲线
+plot(roc_curve, print.auc = TRUE)
+```
+
+
+#### 3.3.5 混淆矩阵
+
+```{r confusion-matrix}
+# 计算混淆矩阵
+cm <- confusionMatrix(data = pred_class, 
+                      reference = testData$black,
+                      positive = "1")
+
+print(cm)
+```
+
+**混淆矩阵解读：**
+
+
+混淆矩阵结构：
+
+```
+           Reference
+Prediction   0    1
+         0  TN   FN
+         1  FP   TP
+```
+
+关键指标解释：
+
+* **准确率 (Accuracy: 69.24%)：** 接近 70%，但需要注意数据的“无信息率”（No Information Rate）为 66.63%（即如果全部猜测为不违约，也能对 66.63%）。模型仅比盲猜提升了不到 3 个百分点，提升有限。
+* **查全率 (Sensitivity / Recall: 27.74%)：** **这是模型最大的短板。** 在所有真实的违约用户中，模型只找出了约 27.7%。这意味着大量的违约用户（漏网之鱼）被模型误判为正常用户（假阴性 FN）。在风控场景中，这代表着巨大的潜在资金损失风险。
+* **特异度 (Specificity: 90.03%)：** 模型对正常用户的识别能力很强，极少将好人误判为坏人（低假阳性）。这说明模型采用了比较保守的策略。
+* **查准率 (Pos Pred Value: 58.22%)：** 当模型预测某人会违约时，有 58% 的概率是预测对的。
+
+
+### 3.4
+
+```{r}
+rpart.plot(tree_model)
+```
+
+**决策树解读：**
+
+根据 `rpart.plot(tree_model)` 的输出结果进行解读：
+
+1.  **根节点与核心分裂变量：**
+    * 根节点包含训练集 5623 个样本。模型使用的第一个最优特征是 **`xindaiR`**（最近小额贷款时间距离），划分阈值为 185。
+    * 这说明该变量是区分用户是否违约的最关键特征。
+
+2.  **主要决策路径分析：**
+    * **低风险人群特征：** 如果 `xindaiR < 185`，模型直接将该群体预测为 **0（未违约）**。这部分涵盖了 59% 样本，且该叶节点的纯度较高（违约概率低）。
+    * **高风险人群特征：** 如果 `xindaiR >= 185`，模型会进一步查看 **`meanpay`**（平均支付额）。
+        * 若 `meanpay >= 400e3`（高平均支付能力），预测为 **0（未违约）**。
+        * 若 `meanpay < 400e3`（低平均支付能力），则被标记为高风险群体，预测结果倾向于 **1（违约）**。
+
+3.  **次级分裂规则：**
+    * 在高风险分支中，模型进一步使用了`xindaiR`、 `zhuanzhangF`（转账频率）、`cardnum`（卡数量）、 `creded`（借贷比率）和`maxpay`(所有行为最大值)进行细分。
+    * 例如：在 `185 <= xindaiR < 310, meanpay < 400e3, zhuanzhangF < 51, cardnum < 14` 条件下，如果 `creded >= 0.14`（借贷比率较高），违约概率较小，预测为**0（未违约）**。
+
+4.  **变量重要性总结：**
+    * **`xindaiR`** 和 **`meanpay`** 是位于树顶层的变量，对分类起决定性作用。
+    * **`creded`** 和 **`zhuanzhangF`** 在树的深层起到了细化风险人群的作用。
